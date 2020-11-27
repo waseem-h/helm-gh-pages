@@ -130,16 +130,18 @@ upload() {
   charts=$(cd ${CHARTS_TMP_DIR} && ls *.tgz | xargs)
 
   mkdir -p ${TARGET_DIR}
-  mv -f ${CHARTS_TMP_DIR}/*.tgz ${TARGET_DIR}
 
   if [[ -f "${TARGET_DIR}/index.yaml" ]]; then
     echo "Found index, merging changes"
-    helm repo index ${TARGET_DIR} --url ${CHARTS_URL} --merge "${TARGET_DIR}/index.yaml"
+    helm repo index --merge ${TARGET_DIR}/index.yaml --url ${CHARTS_URL} ${CHARTS_TMP_DIR}
+    mv -f ${CHARTS_TMP_DIR}/* ${TARGET_DIR}
   else
     echo "No index found, generating a new one"
+    mv -f ${CHARTS_TMP_DIR}/*.tgz ${TARGET_DIR}
     helm repo index ${TARGET_DIR} --url ${CHARTS_URL}
   fi
-
+  
+  
   git add ${TARGET_DIR}
   git commit -m "Publish $charts"
   git push origin ${BRANCH}
